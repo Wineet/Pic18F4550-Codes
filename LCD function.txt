@@ -1,0 +1,50 @@
+#define rs LATDbits.LATD5
+#define rw LATDbits.LATD6
+#define en LATDbits.LATD7
+#define port LATB
+
+void lcd_printc(unsigned char c)
+{
+    /*Define rs rw en port*/
+    rs=1;
+    port=c;
+    en=1;
+    en=1;
+    en=0;
+    __delay_ms(10);
+}
+void lcd_cmd(unsigned char c)
+{
+      /*Define rs rw en port*/
+    rs=0;
+    port=c;
+    en=1;
+    en=1;
+    en=0;
+    __delay_ms(10);
+}
+void lcd_init()
+{
+      /*Define rs rw en port*/
+    /*OSCCON=0X72; Define in main for 8MHZ freq internal*/
+    TRISB=0;    //PortB as output port
+    TRISDbits.TRISD5=0; // RS RW EN pin output Define
+    TRISDbits.TRISD6=0;
+    TRISDbits.TRISD7=0;
+    
+    lcd_cmd(0x38);
+    lcd_cmd(0x01);
+    lcd_cmd(0x06);
+    lcd_cmd(0x0c);
+    lcd_cmd(0x0e);
+    lcd_cmd(0x80);
+     rw=0;
+
+}
+void lcd_prints( char *ptr)
+{
+    while(*ptr!=\0)
+    {
+    lcd_printc(*ptr++);
+    }
+}

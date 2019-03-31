@@ -1,0 +1,80 @@
+#define rs LATDbits.LATD5
+#define rw LATDbits.LATD6
+#define en LATDbits.LATD7
+#define port LATB
+
+void delay(int delay)
+{
+    for (int i = 0; i < delay; i++) {
+        __delay_ms(1);
+
+    }
+
+}
+void lcd_printc(unsigned char c)
+{
+    /*Define rs rw en port*/
+rw=0;
+    rs=1;
+    port =(port&0x0F)|(c&0xF0);
+    en=1;
+    en=1;
+    en=0;
+    __delay_ms(10);
+    rs=1;
+    port =(port&0x0F)|((c<<4)&0xF0);
+    en=1;
+    en=1;
+    en=0;
+    __delay_ms(10);
+}
+void lcd_cmd(unsigned char c)
+{
+      /*Define rs rw en port*/
+    rw=0;
+    rs=0;
+    port =(port&0x0F)|(c&0xF0);
+    en=1;
+    en=1;
+    en=0;
+    __delay_ms(10);
+     rs=0;
+    port =(port&0x0F)|((c<<4)&0xF0);
+    en=1;
+    en=1;
+    en=0;
+    __delay_ms(10);
+}
+void lcd_init()
+{
+      rw=0;
+      /*Define rs rw en port*/
+    /*OSCCON=0X72; Define in main for 8MHZ freq internal*/
+      TRISBbits.TRISB4=0;
+      TRISBbits.TRISB5=0;  
+      TRISBbits.TRISB6=0;
+      TRISBbits.TRISB7=0;
+      
+      LATBbits.LATB4=0;
+      LATBbits.LATB5=0;
+      LATBbits.LATB6=0;
+      LATBbits.LATB7=0;
+    
+    TRISDbits.TRISD5=0; // RS RW EN pin output Define
+    TRISDbits.TRISD6=0;
+    TRISDbits.TRISD7=0;
+     lcd_cmd(0x02);
+          lcd_cmd(0x28);
+           lcd_cmd(0x0E);
+    
+    lcd_cmd(0x80);
+   
+
+}
+void lcd_prints( char *ptr)
+{
+    while(*ptr!=\0)
+    {
+    lcd_printc(*ptr++);
+    }
+}
