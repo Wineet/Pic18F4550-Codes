@@ -1,0 +1,122 @@
+/*
+/*
+ * File:   counter_prog.c
+ * Author: Vinit
+ *
+ * Created on 20 October, 2019, 3:58 PM
+ */
+
+
+#define _XTAL_FREQ 4000000
+
+#include <xc.h>
+typedef enum status_e {false,true} l_status;
+enum condition {off=0,on=1,OFF=0,ON=1,reset=0,set=1,RESET=0,SET=1,Output=0,Input=1};
+typedef unsigned int u_int32;
+typedef unsigned short int u_int16;
+
+void disable_interrupt(void);
+void interrupt ISR(void);
+void enable_interrupt(void);
+void counter_init(void);
+void delay(u_int32 )
+u_int16 counter_read(void);
+void counter_off(void);
+void counter_clear(void);
+void counter_on(void);
+
+
+void main(void) {
+
+ TRISD=Output;                       // Observe Count Value On port (8 LEDS Are Connected) Binary Can be observed
+    LATD=RESET;                         //Clearing Port
+    
+    (void)counter_init();
+    counter_on();
+    u_int16 count_val=0;
+    TRISBbits.RB0=Output;
+    enable_interrupt();
+    
+         LATBbits.LATB0=0;
+    
+   while(1)
+    {          
+                                            // Counting Pulses Will Come from RC0
+        count_val = counter_read();
+        LATD = count_val;                   // We Can observe Count Value on Port
+    }
+
+    return;
+}
+
+void counter_clear(){
+    TMR1=RESET;
+    return;
+}
+void counter_on()
+{
+    T1CONbits.TMR1ON = SET;             //Start Timer
+    return;
+}
+
+void counter_off()
+{
+    T1CONbits.TMR1ON = RESET;           // Stop Timer
+    return;
+}
+
+u_int16 counter_read(){
+    u_int16 counter_val = 0;
+    counter_val=TMR1;
+    return counter_val;
+}
+
+void counter_init(){
+
+    T1CONbits.RD16    = SET;
+    T1CONbits.T1OSCEN = RESET;  // Timer1 Not providing any clock
+    T1CONbits.T1SYNC  = SET;    // Do not Synchronize external clock input
+    T1CONbits.TMR1CS  = SET;    //External Clock form RC0
+    
+        counter_clear();
+    if(RESET == T1CONbits.T1RUN){       // To Know The clock Source Not USing Now
+    
+    }
+    return;
+}
+void delay(u_int32 delay)
+{
+    /*Don't Use this Delay For Precise Operation*/
+    for(u_int32 i=0; i<delay ;i++)
+    {
+         __delay_ms(1);
+    }
+    return;
+}
+
+void enable_interrupt()
+{
+    RCONbits.IPEN   =    SET;    //Interrupt Levels are Enabled
+    INTCONbits.GIE  =    SET;    //Global Interrupt Enable
+    INTCONbits.PEIE =    SET;    //Peripheral Interrupt Enable
+    
+    PIR1bits.TMR1IF = RESET;      // Interrupt OverFlow Flag Must be cleared
+    PIE1bits.TMR1IE = SET;        // Timer 1 Interrupt Enable (Timer OverFlow Enable)
+    IPR1bits.TMR1IP = SET;        // High Priority Set for OverFlow
+    return;
+}
+void disable_interrupt(){
+
+    INTCONbits.GIE  =    RESET;    //Global Interrupt Disable
+    INTCONbits.PEIE =    RESET;           //Peripheral Interrupt Disable
+}
+void interrupt ISR(void)
+{
+    
+    if( SET == PIR1bits.TMR1IF)             
+    {                                   //Interrupt Sub Routine
+          LATBbits.LATB0=1;
+           PIR1bits.TMR1IF = RESET;  //Clearing Flag
+                        
+    }      
+}
