@@ -1,0 +1,114 @@
+
+
+#define _XTAL_FREQ 4000000
+
+#include <xc.h>
+typedef enum status_e {false,true} l_status;
+enum condition {off=0,on=1,OFF=0,ON=1,reset=0,set=1,RESET=0,SET=1,Output=0,Input=1};
+typedef unsigned int u_int32;
+typedef unsigned short int u_int16;
+
+
+void clear_counter(void);
+void delay(u_int32 delay);
+void counter_init(void);
+void counter_on(void);
+u_int16 counter_read(void);
+void counter_off(void);
+void enable_interrupt(void);
+void disable_interrupt(void);
+void interrupt ISR(void);
+
+void main(void) {
+    
+    TRISD=Output;                       // Observe Count Value On port (8 LEDS Are Connected) Binary Can be observed
+    LATD=RESET;                         //Clearing Port
+    
+    (void)counter_init();
+    counter_on();
+    u_int16 count_val=0;
+   
+    enable_interrupt();
+    
+
+    while(1)
+    {
+       
+        count_val = counter_read();
+        LATD = count_val;                   // We Can observe Count Value on Port
+    }
+    return;
+}
+
+
+void counter_off(){
+  T0CONbits.TMR0ON =OFF;                //Counter OFF
+  return;
+}
+
+u_int16 counter_read(void){
+    u_int16 count_val = 0;
+    count_val = TMR0;                   // 16 bit counter value 
+    return count_val;
+}
+
+void counter_on(){
+    T0CONbits.TMR0ON =ON;               // Timer/Counter On bit
+    return;
+}
+
+
+void counter_init(){
+
+    TRISAbits.TRISA4 =Input;       // RA4 pin External Clock Selected so
+    T0CONbits.T08BIT = RESET;      // 16 Bit Mode
+    T0CONbits.T0CS   = SET;        // T0CKI Pin transition or External Clock
+    T0CONbits.T0SE   = RESET;      //  Increment on Low to High Transition
+    T0CONbits.PSA    = SET;        // No Prescalar (Bypassed)
+    clear_counter();               // Needed unless Start Form Garbage Value
+    return;
+}
+
+void clear_counter()
+{
+     TMR0=RESET;
+    return;
+}
+
+void delay(u_int32 delay)
+{
+    /*Don't Use this Delay For Precise Operation*/
+    for(u_int32 i=0; i<delay ;i++)
+    {
+         __delay_ms(1);
+    }
+    return;
+}
+
+void enable_interrupt()
+{
+    RCONbits.IPEN   =    SET;    //Interrupt Levels are Enabled
+    INTCONbits.GIE  =    SET;    //Global Interrupt Enable
+    INTCONbits.PEIE =    SET;    //Peripheral Interrupt Enable
+    
+    INTCONbits.TMR0IF  = RESET;      // Interrupt OverFlow Flag Must be cleared
+    INTCON2bits.TMR0IP = SET;        // High Priority Set for OverFlow
+    INTCONbits.TMR0IE = SET;        // Timer 0 Interrupt Enable (Timer OverFlow Enable)
+   
+    return;
+}
+void disable_interrupt(){
+
+    INTCONbits.GIE  =    RESET;    //Global Interrupt Disable
+    INTCONbits.PEIE =    RESET;           //Peripheral Interrupt Disable
+}
+void interrupt ISR(void)
+{
+    
+    if( SET ==INTCONbits.TMR0IF )             
+    {                                   //Interrupt Sub Routine
+          LATBbits.LATB0=1;
+           INTCONbits.TMR0IF  = RESET;       //Clearing Flag
+                        
+    }      
+}
