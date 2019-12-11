@@ -1,0 +1,49 @@
+/*
+ * File:   switch_led.c
+ * Author: Vinit
+ *
+ * Created on 10 December, 2019, 8:38 PM
+ */
+
+/*
+*	Switch And Led Code
+* Run On internal OScillator
+*
+*/
+
+
+#include <xc.h>
+#include <PIC18F4550.h>
+#define _XTAL_FREQ 4000000
+
+void delay(unsigned msdelay)
+{
+    for(int i=0;i<msdelay;i++)
+    {
+        __delay_ms(1);
+    }
+}
+void main(void) {
+    
+    ADCON1bits.PCFG = 0b0111;   // "AN8 - AN12" As a Digital Output Pins (Default Pins As Analog Pin)
+    TRISDbits.TRISD1 = 1;       // TRISD D1 as Input
+  
+    
+    TRISDbits.TRISD0 = 0;    //PORTD D0 as Output
+    
+    TRISBbits.TRISB6 = 1;    //Input B6
+    TRISBbits.TRISB0 = 1;    //Input B1
+    
+    while(1)
+    {
+        if(PORTBbits.RB0 == 1)
+        {
+             LATDbits.LATD0 = 1;
+             delay(500);
+             LATDbits.LATD0 = 0;
+             delay(500);
+        }
+    }
+    
+    return;
+}
